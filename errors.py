@@ -1,3 +1,10 @@
+class LogFileIsADirectory(Exception):
+    """Raised when provided log file is a directory."""
+
+    def __init__(self, path):
+        super().__init__(f'Provided logging file ("{path}") is a directory.')
+
+
 class LogPathDoesNotExist(Exception):
     """Raised when provided log path does not exist."""
 
