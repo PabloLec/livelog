@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+
 class LogFileIsADirectory(Exception):
     """Raised when provided log file is a directory."""
 

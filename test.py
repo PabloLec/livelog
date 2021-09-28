@@ -1,6 +1,6 @@
 from logger import Logger
 
-logger = Logger()
+logger = Logger(False)
 logger.output_file = "/tmp/test"
 while True:
     logger.error("C'est une erreur")
