@@ -23,3 +23,13 @@ class LogPathInsufficientPermissions(Exception):
             "You do not have permissions to read and/or write "
             f'to provided logging directory ("{path}").'
         )
+
+
+class LogLevelDoesNotExist(Exception):
+    """Raised when user provided log level does not exist."""
+
+    def __init__(self, level):
+        super().__init__(
+            f'Provided log level ("{level}") does not exist. Choose between '
+            '"ERROR", "WARNING", "INFO" and "DEBUG".'
+        )
