@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from typing import Union
-from sys import argv
-from os import system, name, SEEK_END
+from os import _exit, system, name, SEEK_END
 from shutil import get_terminal_size
-from time import sleep
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, DirModifiedEvent, FileModifiedEvent
 from colorama import Style
@@ -59,6 +57,7 @@ class ReadFile(FileSystemEventHandler):
         """
 
         self.clear()
+        print(Style.RESET_ALL)
         tail(self._file, get_terminal_size(fallback=(120, 50))[1])
         print(Style.RESET_ALL)
 
@@ -76,8 +75,8 @@ def start_reader(file: str):
     observer.start()
 
     try:
-        while True:
-            sleep(1)
+        input("")
+        _exit(1)
 
     finally:
         observer.stop()
