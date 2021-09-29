@@ -9,4 +9,4 @@ while True:
     logger.debug("Du debugging")
     import time
 
-    time.sleep(0.1)
+    time.sleep(0.4)

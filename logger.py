@@ -14,7 +14,7 @@ class Logger:
     _LEVELS = {"ERROR": 3, "WARNING": 2, "INFO": 1, "DEBUG": 0}
 
     def __new__(cls, *args, **kwargs):
-        is_singleton = (len(args) == 4 and args[3] == True) or kwargs.get("singleton")
+        is_singleton = (len(args) == 5 and args[4] == True) or kwargs.get("singleton")
         if is_singleton and not Logger.__instance or not is_singleton:
             Logger.__instance = object.__new__(cls)
         return Logger.__instance
@@ -24,9 +24,9 @@ class Logger:
         output_file: str = None,
         level: str = "INFO",
         enabled: bool = True,
+        colors: bool = True,
         singleton: bool = False,
     ):
-
         if output_file is None:
             self._output_file = Path(
                 f"/tmp/{__name__}.log"
@@ -42,6 +42,7 @@ class Logger:
         self._level = level
 
         self._enabled = enabled
+        self._colors = colors
 
     @property
     def output_file(self):
@@ -86,28 +87,46 @@ class Logger:
         if not self._enabled:
             return
 
-        time = Style.DIM + datetime.now().strftime("%H:%M:%S.%f")[:-3]
-        dash = Style.BRIGHT + " - "
+        if self._colors:
+            time = Style.DIM + datetime.now().strftime("%H:%M:%S.%f")[:-3]
+            dash = Style.BRIGHT + " - "
+            content = f"{Style.NORMAL}{content}{Style.RESET_ALL}"
+        else:
+            time = datetime.now().strftime("%H:%M:%S.%f")[:-3]
+            dash = " - "
+
         with open(self._output_file, "a") as f:
-            f.write(f"{time}{dash}{Style.NORMAL}{content}{Style.RESET_ALL}\n")
+            f.write(f"{time}{dash}{content}\n")
 
     def _is_valid_level(self, level: str):
         return self._LEVELS[self._level] <= self._LEVELS[level]
 
     def error(self, message: str):
-        self._write(content=Fore.RED + message)
+        if self._colors:
+            self._write(content=Fore.RED + message)
+        else:
+            self._write(content="error   | " + message)
 
     def warn(self, message: str):
         if not self._is_valid_level("WARNING"):
             return
-        self._write(content=Fore.YELLOW + message)
+        if self._colors:
+            self._write(content=Fore.YELLOW + message)
+        else:
+            self._write(content="warning | " + message)
 
     def info(self, message: str):
         if not self._is_valid_level("INFO"):
             return
-        self._write(content=Fore.BLUE + message)
+        if self._colors:
+            self._write(content=Fore.BLUE + message)
+        else:
+            self._write(content="info    | " + message)
 
     def debug(self, message: str):
         if not self._is_valid_level("DEBUG"):
             return
-        self._write(content=Fore.WHITE + message)
+        if self._colors:
+            self._write(content=Fore.WHITE + message)
+        else:
+            self._write(content="debug   | " + message)
