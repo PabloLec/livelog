@@ -6,7 +6,7 @@ from platform import system
 from tempfile import gettempdir
 from datetime import datetime
 from colorama import Fore, Style
-from errors import *
+from .errors import *
 
 
 class Logger:
@@ -52,9 +52,9 @@ class Logger:
 
         if output_file is None:
             self._output_file = Path(
-                f"/tmp/{__name__}.log"
+                "/tmp/livelog.log"
                 if system() == "Darwin"
-                else Path(gettempdir()) / f"{__name__}.log"
+                else Path(gettempdir()) / "livelog.log"
             )
         else:
             self._output_file = output_file

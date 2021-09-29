@@ -1,4 +1,4 @@
-from logger import Logger
+from livelog import Logger
 
 logger = Logger()
 print(logger.output_file)  # = "/tmp/test"

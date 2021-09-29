@@ -84,6 +84,8 @@ if __name__ == "__main__":
         print("! No file specified !")
         _exit(1)
 
+    print("INNER")
+
     file = argv[1]
     event_handler = ReadFile(file=file)
     observer = Observer()
