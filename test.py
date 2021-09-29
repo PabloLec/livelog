@@ -1,7 +1,7 @@
 from logger import Logger
 
-logger = Logger(False)
-logger.output_file = "/tmp/test"
+logger = Logger()
+print(logger.output_file)  # = "/tmp/test"
 while True:
     logger.error("C'est une erreur")
     logger.warn("Juste un warning")

@@ -13,12 +13,6 @@ class Logger:
     __instance = None
     _LEVELS = {"ERROR": 3, "WARNING": 2, "INFO": 1, "DEBUG": 0}
 
-    def __new__(cls, *args, **kwargs):
-        is_singleton = (len(args) == 4 and args[3] == True) or kwargs.get("singleton")
-        if is_singleton and not Logger.__instance or not is_singleton:
-            Logger.__instance = object.__new__(cls)
-        return Logger.__instance
-
     def __init__(
         self,
         output_file: str = None,
