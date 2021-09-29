@@ -73,18 +73,14 @@ class Logger:
 
     @output_file.setter
     def output_file(self, value: str):
-        if value == "local":
-            dir = Path(__file__).parent.resolve()
-            path = dir / "output.log"
-        else:
-            path = Path(value)
-            dir = path.parent.resolve()
-            if path.is_dir():
-                raise LogFileIsADirectory(path=path)
-            if not dir.is_dir():
-                raise LogPathDoesNotExist(path=dir)
-            if not access(dir, X_OK):
-                raise LogPathInsufficientPermissions(path=dir)
+        path = Path(value)
+        dir = path.parent.resolve()
+        if path.is_dir():
+            raise LogFileIsADirectory(path=path)
+        if not dir.is_dir():
+            raise LogPathDoesNotExist(path=dir)
+        if not access(dir, X_OK):
+            raise LogPathInsufficientPermissions(path=dir)
 
         self._output_file = path
 
