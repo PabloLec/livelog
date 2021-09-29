@@ -8,7 +8,6 @@ from time import sleep
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, DirModifiedEvent, FileModifiedEvent
 from colorama import Style
-from pynput import keyboard
 
 
 def tail(file_name: str, lines: int):
@@ -46,21 +45,6 @@ class ReadFile(FileSystemEventHandler):
 
         self._file = file
         self.on_modified(event=None)
-        keyboard_listener = keyboard.Listener(on_press=self.on_press)
-        keyboard_listener.start()
-
-    def on_press(self, key):
-        """Button press event handler.
-
-        Args:
-            key (Key): Pressed key
-        """
-
-        try:
-            if key.char in ["Q", "q"]:
-                _exit(1)
-        except AttributeError:
-            return
 
     def clear(self):
         """Clear terminal."""
