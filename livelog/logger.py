@@ -24,7 +24,7 @@ class Logger:
     _LEVELS = {"ERROR": 3, "WARNING": 2, "INFO": 1, "DEBUG": 0}
 
     def __new__(cls, *args, **kwargs):
-        is_singleton = (len(args) == 5 and args[4] == True) or kwargs.get("singleton")
+        is_singleton = (len(args) == 6 and args[5] == True) or kwargs.get("singleton")
         if is_singleton and not Logger.__instance or not is_singleton:
             Logger.__instance = object.__new__(cls)
         return Logger.__instance
@@ -35,6 +35,7 @@ class Logger:
         level: str = "INFO",
         enabled: bool = True,
         colors: bool = True,
+        erase: bool = True,
         singleton: bool = False,
     ):
         """Logger initialization.
@@ -44,11 +45,16 @@ class Logger:
             level (str, optional): Minimum log level. Defaults to "INFO".
             enabled (bool, optional): Is log enabled ? Defaults to True.
             colors (bool, optional): Are colors enabled ? Defaults to True.
+            erase (bool, optional): Should preexisting file be erased ? Defaults to True.
             singleton (bool, optional): Is singleton ? Defaults to False.
 
         Raises:
             LogLevelDoesNotExist: [description]
         """
+
+        self._enabled = enabled
+        self._colors = colors
+        self._erase = erase
 
         if output_file is None:
             self._output_file = Path(
@@ -57,35 +63,23 @@ class Logger:
                 else Path(gettempdir()) / "livelog.log"
             )
         else:
-            self._output_file = output_file
+            self._output_file = Path(output_file)
+        self._verify_file(self._output_file)
 
         level = level.upper()
         if level not in self._LEVELS:
             raise LogLevelDoesNotExist(level)
         self._level = level
 
-        self._enabled = enabled
-        self._colors = colors
-
     @property
     def output_file(self):
         return self._output_file
 
     @output_file.setter
-    def output_file(self, value: str):
+    def set_output_file(self, value: str):
         path = Path(value)
-        dir = path.parent.resolve()
-        if path.is_dir():
-            raise LogFileIsADirectory(path=path)
-        if not dir.is_dir():
-            raise LogPathDoesNotExist(path=dir)
-        if not access(dir, X_OK):
-            raise LogPathInsufficientPermissions(path=dir)
-
+        self._verify_file(file=path)
         self._output_file = path
-
-        if path.is_file():
-            self._clear_file()
 
     @property
     def level(self):
@@ -98,9 +92,27 @@ class Logger:
             raise LogLevelDoesNotExist(level)
         self._level = level
 
+    def _verify_file(self, file: Path):
+        """Verify if the file is a valid log file and clear its preexisting content.
+
+        Args:
+            file (Path): File path to verify.
+        """
+
+        dir = file.parent.resolve()
+        if file.is_dir():
+            raise LogFileIsADirectory(path=file)
+        if not dir.is_dir():
+            raise LogPathDoesNotExist(path=dir)
+        if not access(dir, X_OK):
+            raise LogPathInsufficientPermissions(path=dir)
+        self._clear_file()
+
     def _clear_file(self):
         """Clear output file content."""
 
+        if not self._erase or not self._output_file.is_file():
+            return
         with open(self._output_file, "w") as f:
             pass
 
