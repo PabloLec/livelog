@@ -32,7 +32,7 @@ class Logger:
     def __init__(
         self,
         output_file: str = None,
-        level: str = "INFO",
+        level: str = "DEBUG",
         enabled: bool = True,
         colors: bool = True,
         erase: bool = True,
@@ -42,7 +42,7 @@ class Logger:
 
         Args:
             output_file (str, optional): Output file path. Defaults to None.
-            level (str, optional): Minimum log level. Defaults to "INFO".
+            level (str, optional): Minimum log level. Defaults to "DEBUG".
             enabled (bool, optional): Is log enabled ? Defaults to True.
             colors (bool, optional): Are colors enabled ? Defaults to True.
             erase (bool, optional): Should preexisting file be erased ? Defaults to True.
@@ -116,7 +116,7 @@ class Logger:
         with open(self._output_file, "w") as f:
             pass
 
-    def _write(self, content: str):
+    def _write(self, level: str, content: str):
         """Write provided content to output file.
 
         Args:
@@ -126,16 +126,10 @@ class Logger:
         if not self._enabled:
             return
 
-        if self._colors:
-            time = Style.DIM + datetime.now().strftime("%H:%M:%S.%f")[:-3]
-            dash = Style.BRIGHT + " - "
-            content = f"{Style.NORMAL}{content}{Style.RESET_ALL}"
-        else:
-            time = datetime.now().strftime("%H:%M:%S.%f")[:-3]
-            dash = " - "
+        time = datetime.now().strftime("%H:%M:%S.%f")[:-3]
 
         with open(self._output_file, "a") as f:
-            f.write(f"{time}{dash}{content}\n")
+            f.write(f"{level} | {time} - {content}\n")
 
     def _is_valid_level(self, level: str):
         """Verify if the given log level should be written.
@@ -156,10 +150,7 @@ class Logger:
             message (str): Log message
         """
 
-        if self._colors:
-            self._write(content=Fore.RED + message)
-        else:
-            self._write(content="error   | " + message)
+        self._write(level="ERR!", content=message)
 
     def warn(self, message: str):
         """Write warning message.
@@ -170,10 +161,7 @@ class Logger:
 
         if not self._is_valid_level("WARNING"):
             return
-        if self._colors:
-            self._write(content=Fore.YELLOW + message)
-        else:
-            self._write(content="warning | " + message)
+        self._write(level="WARN", content=message)
 
     def info(self, message: str):
         """Write info message.
@@ -184,10 +172,7 @@ class Logger:
 
         if not self._is_valid_level("INFO"):
             return
-        if self._colors:
-            self._write(content=Fore.BLUE + message)
-        else:
-            self._write(content="info    | " + message)
+        self._write(level="INFO", content=message)
 
     def debug(self, message: str):
         """Write debug message.
@@ -198,7 +183,4 @@ class Logger:
 
         if not self._is_valid_level("DEBUG"):
             return
-        if self._colors:
-            self._write(content=Fore.WHITE + message)
-        else:
-            self._write(content="debug   | " + message)
+        self._write(level="DBUG", content=message)

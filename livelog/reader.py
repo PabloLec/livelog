@@ -5,7 +5,15 @@ from os import _exit, system, name, SEEK_END
 from shutil import get_terminal_size
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, DirModifiedEvent, FileModifiedEvent
-from colorama import Style
+from colorama import Style, Fore
+
+CLEAR_CMD = "cls" if name == "nt" else "clear"
+
+
+def clear():
+    """Clear terminal."""
+
+    system(CLEAR_CMD)
 
 
 def tail(file_name: str, lines: int):
@@ -28,7 +36,28 @@ def tail(file_name: str, lines: int):
             finally:
                 rows = list(f)
             pos *= 2
-    print("".join(rows[-lines:]))
+
+    colored_lines = map(color_line, rows[-lines:])
+    clear()
+    print("".join(list(colored_lines)))
+
+
+LEVEL_COLORS = {
+    "ERR!": Fore.RED,
+    "WARN": Fore.YELLOW,
+    "INFO": Fore.BLUE,
+    "DBUG": Fore.WHITE,
+}
+
+
+def color_line(line: str):
+    level = line[:4]
+
+    output = (
+        f"{Style.DIM}{line[7:19]}{Style.BRIGHT} - {Style.NORMAL}"
+        f"{LEVEL_COLORS[level]}{line[26:]}{Style.RESET_ALL}"
+    )
+    return output
 
 
 class ReadFile(FileSystemEventHandler):
@@ -44,11 +73,6 @@ class ReadFile(FileSystemEventHandler):
         self._file = file
         self.on_modified(event=None)
 
-    def clear(self):
-        """Clear terminal."""
-
-        _ = system("cls") if name == "nt" else system("clear")
-
     def on_modified(self, event: Union[DirModifiedEvent, FileModifiedEvent, None]):
         """File modification callback.
 
@@ -56,10 +80,9 @@ class ReadFile(FileSystemEventHandler):
             event (Union[DirModifiedEvent, FileModifiedEvent, None]): Watchdog event
         """
 
-        self.clear()
-        print(Style.RESET_ALL)
+        print(Style.RESET_ALL, end="")
         tail(self._file, get_terminal_size(fallback=(120, 50))[1])
-        print(Style.RESET_ALL)
+        print(Style.RESET_ALL, end="")
 
 
 def start_reader(file: str):

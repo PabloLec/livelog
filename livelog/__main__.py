@@ -2,7 +2,7 @@
 
 from sys import argv
 from os import _exit
-from .reader import start_reader
+from livelog.reader import start_reader
 
 if __name__ == "__main__":
     if len(argv) == 1:
