@@ -2,19 +2,20 @@
 
 from typing import Union
 from os import _exit, system, name, SEEK_END
+from time import sleep
 from shutil import get_terminal_size
 from pathlib import Path
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, DirModifiedEvent, FileModifiedEvent
 from colorama import Style, Fore
 
-CLEAR_CMD = "cls" if name == "nt" else "clear"
-
-
-def clear():
-    """Clear terminal."""
-
-    system(CLEAR_CMD)
+_CLEAR_CMD = "cls" if name == "nt" else "clear"
+_LEVEL_COLORS = {
+    "ERR!": Fore.RED,
+    "WARN": Fore.YELLOW,
+    "INFO": Fore.BLUE,
+    "DBUG": Fore.WHITE,
+}
 
 
 def tail(file_name: str, lines: int):
@@ -39,16 +40,9 @@ def tail(file_name: str, lines: int):
             pos *= 2
 
     colored_lines = map(color_line, rows[-lines:])
-    clear()
-    print("".join(list(colored_lines)))
-
-
-LEVEL_COLORS = {
-    "ERR!": Fore.RED,
-    "WARN": Fore.YELLOW,
-    "INFO": Fore.BLUE,
-    "DBUG": Fore.WHITE,
-}
+    output = "".join(list(colored_lines))
+    system(_CLEAR_CMD)
+    print(output)
 
 
 def color_line(line: str):
@@ -56,7 +50,7 @@ def color_line(line: str):
 
     output = (
         f"{Style.DIM}{line[7:19]}{Style.BRIGHT} - {Style.NORMAL}"
-        f"{LEVEL_COLORS[level]}{line[26:]}{Style.RESET_ALL}"
+        f"{_LEVEL_COLORS[level]}{line[26:]}{Style.RESET_ALL}"
     )
     return output
 
@@ -72,7 +66,14 @@ class ReadFile(FileSystemEventHandler):
         """
 
         self._file = file
-        self.on_modified(event=None)
+        while True:
+            try:
+                self.on_modified(event=None)
+                break
+            except FileNotFoundError:
+                system(_CLEAR_CMD)
+                print("File not found, waiting for creation.")
+                sleep(1)
 
     def on_modified(self, event: Union[DirModifiedEvent, FileModifiedEvent, None]):
         """File modification callback.
