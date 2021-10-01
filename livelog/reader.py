@@ -3,6 +3,7 @@
 from typing import Union
 from os import _exit, system, name, SEEK_END
 from shutil import get_terminal_size
+from pathlib import Path
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, DirModifiedEvent, FileModifiedEvent
 from colorama import Style, Fore
