@@ -73,7 +73,7 @@ class Reader(FileSystemEventHandler):
 
         colored_lines = map(self.color_line, rows[-lines:])
         output = "".join(list(colored_lines))
-        system(self.self._CLEAR_CMD)
+        system(self._CLEAR_CMD)
         print(output)
 
 
@@ -82,7 +82,7 @@ class Reader(FileSystemEventHandler):
 
         output = (
             f"{Style.DIM}{line[7:19]}{Style.BRIGHT} - {Style.NORMAL}"
-            f"{self.self._LEVEL_COLORS[level]}{line[22:]}{Style.RESET_ALL}"
+            f"{self._LEVEL_COLORS[level]}{line[22:]}{Style.RESET_ALL}"
         )
         return output
 

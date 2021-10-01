@@ -56,9 +56,8 @@ class Logger:
             )
         else:
             self._file = Path(file)
-        self._verify_file(self._file)
 
-        print(self._file)
+        self._verify_file()
 
         level = level.upper()
         if level not in self._LEVELS:
@@ -86,16 +85,12 @@ class Logger:
             raise LogLevelDoesNotExist(level)
         self._level = level
 
-    def _verify_file(self, file: Path):
-        """Verify if the file is a valid log file and clear its preexisting content.
+    def _verify_file(self):
+        """Verify if the file is a valid log file and clear its preexisting content."""
 
-        Args:
-            file (Path): File path to verify.
-        """
-
-        dir = file.parent.resolve()
-        if file.is_dir():
-            raise LogFileIsADirectory(path=file)
+        dir = self._file.parent.resolve()
+        if self._file.is_dir():
+            raise LogFileIsADirectory(path=self._file)
         if not dir.is_dir():
             raise LogPathDoesNotExist(path=dir)
         if not access(dir, X_OK):
