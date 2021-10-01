@@ -45,6 +45,7 @@ class Reader(FileSystemEventHandler):
         while not self._file_exists():
             print("File not found, waiting for creation.")
             sleep(1)
+            system(self._CLEAR_CMD)
 
         self.on_modified(event=None)
 
