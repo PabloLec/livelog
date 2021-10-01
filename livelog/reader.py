@@ -20,8 +20,8 @@ class Reader(FileSystemEventHandler):
         "INFO": Fore.BLUE,
         "DBUG": Fore.WHITE,
     }
-    _LONG_LEVEL_TO_SHORT = {"ERROR": "ERR!", "WARN": "WARNING", "INFO": "INFO", "DEBUG": "DBUG"}
-    _LEVELS = {"ERR!": 3, "WARN": 2, "INFO": 1, "DBUG": 0}
+    _LONG_LEVEL_TO_SHORT = {"ERROR": "ERR!", "WARN": "WARNING", "INFO": "INFO", "DEBUG": "DBUG",}
+    _LEVELS = {"ERR!": 3, "WARN": 2, "INFO": 1, "DBUG": 0,}
 
     def __init__(self, file: str, level: str = "DEBUG"):
         """Reader initialization.
@@ -38,14 +38,15 @@ class Reader(FileSystemEventHandler):
             raise LogLevelDoesNotExist(level)
         self._level = self._LONG_LEVEL_TO_SHORT[level]
 
-        while True:
-            try:
-                self.on_modified(event=None)
-                break
-            except FileNotFoundError:
-                system(self._CLEAR_CMD)
-                print("File not found, waiting for creation.")
-                sleep(1)
+        self._read_index = 0
+        self._empty_read_count = 0
+
+        while not self._file_exists():
+            system(self._CLEAR_CMD)
+            print("File not found, waiting for creation.")
+            sleep(1)
+
+        self.on_modified(event=None)
 
     def _verify_file(self):
         """Verify if the file is a valid log file."""
@@ -58,55 +59,49 @@ class Reader(FileSystemEventHandler):
         if not access(dir, R_OK):
             raise LogPathInsufficientPermissions(path=dir)
 
+    def _file_exists(self):
+        return self._file.is_file()
 
-    def tail(self, length: int):
+    def print_output(self):
         """Emulate tail command behavior by printing n last lines.
 
         Args:
             length (int): Number of lines to print
         """
 
-        pos = length + 1
-        rows = []
-        with open(self._file) as f:
-            while len(rows) <= length:
-                try:
-                    f.seek(-pos, 2)
-                except IOError:
-                    f.seek(0)
-                    break
-                finally:
-                    rows = list(f)
-                pos *= 2
-
-        return rows[-length:], len(rows)
-
-    def get_output(self, length: int):
-        """Emulate tail command behavior by printing n last lines.
-
-        Args:
-            length (int): Number of lines to print
-        """
-
-        rows, total_rows = [], length + 1
-        if self._level == "DBUG":
-            rows, _ = self.tail(length=length)
-        else:
-            while len(rows) < length and total_rows > length:
-                rows, total_rows = self.tail(length=length)
-                rows = self.filter_lines(rows)
-                length += 1
+        rows = self.get_new_lines()
+        if rows is None:
+            return
+        rows = self.filter_log_level(rows)
 
         colored_lines = map(self.color_line, rows)
         output = "".join(list(colored_lines))
-        system(self._CLEAR_CMD)
-        print(output)
+        print(output, end="")
 
 
-    def filter_lines(self, lines: list):
+    def get_new_lines(self):
+        """Emulate tail command behavior by printing n last lines."""
+
+
+        with open(self._file, "r") as f:
+            f.seek(self._read_index)
+            rows = list(f)
+            if len(rows) == 0:
+                self._empty_read_count += 1
+                if self._empty_read_count >= 3:
+                    self._read_index = 0
+                    self._empty_read_count = 0
+                    return self.get_new_lines()
+                return None
+            self._read_index += sum(map(len, rows))
+
+        return rows
+
+
+    def filter_log_level(self, lines: list):
         for i, line in enumerate(lines):
             level = line[:4]
-            if self._LEVELS[self._level] >= self._LEVELS[level]:
+            if self._LEVELS[self._level] > self._LEVELS[level]:
                 del lines[i]
         return lines
 
@@ -119,16 +114,16 @@ class Reader(FileSystemEventHandler):
         )
         return output
 
-    def on_modified(self, event: Union[DirModifiedEvent, FileModifiedEvent, None]):
+
+    def on_modified(self, event: Union[FileModifiedEvent, None]):
         """File modification callback.
 
         Args:
-            event (Union[DirModifiedEvent, FileModifiedEvent, None]): Watchdog event
+            event (Union[FileModifiedEvent, None]): Watchdog event
         """
 
         print(Style.RESET_ALL, end="")
-        self.get_output(get_terminal_size(fallback=(120, 50))[1])
-        #self.get_output(5)
+        self.print_output()
         print(Style.RESET_ALL, end="")
 
 
