@@ -10,6 +10,7 @@ from watchdog.events import FileSystemEventHandler, DirModifiedEvent, FileModifi
 from colorama import Style, Fore
 from .errors import *
 
+
 class Reader(FileSystemEventHandler):
     """Watchdog handler to monitor file changes."""
 
@@ -20,8 +21,18 @@ class Reader(FileSystemEventHandler):
         "INFO": Fore.BLUE,
         "DBUG": Fore.WHITE,
     }
-    _LONG_LEVEL_TO_SHORT = {"ERROR": "ERR!", "WARN": "WARNING", "INFO": "INFO", "DEBUG": "DBUG",}
-    _LEVELS = {"ERR!": 3, "WARN": 2, "INFO": 1, "DBUG": 0,}
+    _LONG_LEVEL_TO_SHORT = {
+        "ERROR": "ERR!",
+        "WARN": "WARNING",
+        "INFO": "INFO",
+        "DEBUG": "DBUG",
+    }
+    _LEVELS = {
+        "ERR!": 3,
+        "WARN": 2,
+        "INFO": 1,
+        "DBUG": 0,
+    }
 
     def __init__(self, file: str, level: str, nocolors: bool):
         """Reader initialization.
@@ -77,21 +88,20 @@ class Reader(FileSystemEventHandler):
 
         if self._nocolors:
             output = "".join(rows)
+            print(output, end="")
         else:
             colored_lines = map(self.color_line, rows)
             output = "".join(list(colored_lines))
-        print(output, end="")
-
+            print(Style.RESET_ALL + output + Style.RESET_ALL, end="")
 
     def get_new_lines(self):
         """Emulate tail command behavior by printing n last lines."""
-
 
         with open(self._file, "r") as f:
             f.seek(self._read_index)
             rows = list(f)
             if len(rows) == 0 and self._read_index > 0:
-                f.seek(self._read_index-1)
+                f.seek(self._read_index - 1)
                 if len(list(f)) > 0:
                     return None
                 self._read_index = 0
@@ -99,7 +109,6 @@ class Reader(FileSystemEventHandler):
             self._read_index += sum(map(len, rows))
 
         return rows
-
 
     def filter_log_level(self, lines: list):
         for i, line in enumerate(lines):
@@ -117,7 +126,6 @@ class Reader(FileSystemEventHandler):
         )
         return output
 
-
     def on_modified(self, event: Union[FileModifiedEvent, None]):
         """File modification callback.
 
@@ -125,9 +133,7 @@ class Reader(FileSystemEventHandler):
             event (Union[FileModifiedEvent, None]): Watchdog event
         """
 
-        print(Style.RESET_ALL, end="")
         self.print_output()
-        print(Style.RESET_ALL, end="")
 
 
 def start_reader(file: str, level: str, nocolors: bool):

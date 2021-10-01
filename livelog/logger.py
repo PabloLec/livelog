@@ -22,7 +22,6 @@ class Logger:
 
     _LEVELS = {"ERROR": 3, "WARNING": 2, "INFO": 1, "DEBUG": 0}
 
-
     def __init__(
         self,
         file: str = None,
@@ -174,12 +173,15 @@ class Logger:
             return
         self._write(level="DBUG", content=message)
 
+
 class Singleton(type):
     _instances = {}
+
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
+
 
 class LoggerSingleton(Logger, metaclass=Singleton):
     pass
