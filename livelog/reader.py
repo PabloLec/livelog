@@ -40,7 +40,6 @@ class Reader(FileSystemEventHandler):
         self._nocolors = nocolors
 
         self._read_index = 0
-        self._empty_read_count = 0
 
         system(self._CLEAR_CMD)
         while not self._file_exists():
@@ -90,15 +89,12 @@ class Reader(FileSystemEventHandler):
         with open(self._file, "r") as f:
             f.seek(self._read_index)
             rows = list(f)
-            if len(rows) == 0:
-                self._empty_read_count += 1
-                # NOT WORKING, NEED A FIX
-                if self._empty_read_count >= 3:
-                    self._read_index = 0
-                    self._empty_read_count = 0
-                    print(" - - - FAIL - - - ")
-                    return self.get_new_lines()
-                return None
+            if len(rows) == 0 and self._read_index > 0:
+                f.seek(self._read_index-1)
+                if len(list(f)) > 0:
+                    return None
+                self._read_index = 0
+                return self.get_new_lines()
             self._read_index += sum(map(len, rows))
 
         return rows
@@ -145,10 +141,6 @@ def start_reader(file: str, level: str, nocolors: bool):
     observer.schedule(event_handler, file, recursive=True)
     observer.start()
 
-    try:
-        input("")
-        _exit(1)
-
-    finally:
-        observer.stop()
-        observer.join()
+    input("")
+    observer.stop()
+    observer.join()
