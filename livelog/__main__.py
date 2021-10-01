@@ -12,7 +12,7 @@ from livelog.logger import Logger
 def parse_args():
     parser = ArgumentParser(description='Live read a log file')
     parser.add_argument('-f', '--file', action='store', type=str, required=False)
-    parser.add_argument('-l', '--level', action='store', type=str, required=False)
+    parser.add_argument('-l', '--level', action='store', type=str, default="DEBUG", required=False)
     parser.add_argument('--nocolors', action='store_true', required=False)
     args = parser.parse_args()
 
@@ -27,11 +27,13 @@ def parse_args():
             else Path(gettempdir()) / "livelog.log"
         )
 
-    return file
+
+
+    return file, args.level, args. nocolors
 
 
 
 if __name__ == "__main__":
-    file = parse_args()
+    file, level, nocolors = parse_args()
     
-    start_reader(file=file)
+    start_reader(file=file, level=level, nocolors=nocolors)

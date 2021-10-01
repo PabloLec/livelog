@@ -23,7 +23,7 @@ class Reader(FileSystemEventHandler):
     _LONG_LEVEL_TO_SHORT = {"ERROR": "ERR!", "WARN": "WARNING", "INFO": "INFO", "DEBUG": "DBUG",}
     _LEVELS = {"ERR!": 3, "WARN": 2, "INFO": 1, "DBUG": 0,}
 
-    def __init__(self, file: str, level: str = "DEBUG"):
+    def __init__(self, file: str, level: str, nocolors: bool):
         """Reader initialization.
 
         Args:
@@ -37,12 +37,13 @@ class Reader(FileSystemEventHandler):
         if level not in self._LONG_LEVEL_TO_SHORT:
             raise LogLevelDoesNotExist(level)
         self._level = self._LONG_LEVEL_TO_SHORT[level]
+        self._nocolors = nocolors
 
         self._read_index = 0
         self._empty_read_count = 0
 
+        system(self._CLEAR_CMD)
         while not self._file_exists():
-            system(self._CLEAR_CMD)
             print("File not found, waiting for creation.")
             sleep(1)
 
@@ -74,8 +75,11 @@ class Reader(FileSystemEventHandler):
             return
         rows = self.filter_log_level(rows)
 
-        colored_lines = map(self.color_line, rows)
-        output = "".join(list(colored_lines))
+        if self._nocolors:
+            output = "".join(rows)
+        else:
+            colored_lines = map(self.color_line, rows)
+            output = "".join(list(colored_lines))
         print(output, end="")
 
 
@@ -88,9 +92,11 @@ class Reader(FileSystemEventHandler):
             rows = list(f)
             if len(rows) == 0:
                 self._empty_read_count += 1
+                # NOT WORKING, NEED A FIX
                 if self._empty_read_count >= 3:
                     self._read_index = 0
                     self._empty_read_count = 0
+                    print(" - - - FAIL - - - ")
                     return self.get_new_lines()
                 return None
             self._read_index += sum(map(len, rows))
@@ -127,14 +133,14 @@ class Reader(FileSystemEventHandler):
         print(Style.RESET_ALL, end="")
 
 
-def start_reader(file: str):
+def start_reader(file: str, level: str, nocolors: bool):
     """Start reader process.
 
     Args:
         file (str): File to be read
     """
 
-    event_handler = Reader(file=file)
+    event_handler = Reader(file=file, level=level, nocolors=nocolors)
     observer = Observer()
     observer.schedule(event_handler, file, recursive=True)
     observer.start()
