@@ -5,6 +5,7 @@ from platform import system
 from tempfile import gettempdir
 from pathlib import Path
 from livelog.reader import start_reader
+from livelog.logger import Logger
 
 if __name__ == "__main__":
     if len(argv) == 1:
@@ -16,8 +17,6 @@ if __name__ == "__main__":
         )
     else:
         file=Path(argv[1])
-        if not file.is_file():
-            print("Bad file path")
-            exit()
+
 
     start_reader(file=file)
