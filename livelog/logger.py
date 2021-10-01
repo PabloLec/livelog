@@ -20,33 +20,25 @@ class Logger:
             write to output path
     """
 
-    __instance = None
     _LEVELS = {"ERROR": 3, "WARNING": 2, "INFO": 1, "DEBUG": 0}
 
-    def __new__(cls, *args, **kwargs):
-        is_singleton = (len(args) == 6 and args[5] == True) or kwargs.get("singleton")
-        if is_singleton and not Logger.__instance or not is_singleton:
-            Logger.__instance = object.__new__(cls)
-        return Logger.__instance
 
     def __init__(
         self,
-        output_file: str = None,
+        file: str = None,
         level: str = "DEBUG",
         enabled: bool = True,
         colors: bool = True,
         erase: bool = True,
-        singleton: bool = False,
     ):
         """Logger initialization.
 
         Args:
-            output_file (str, optional): Output file path. Defaults to None.
+            file (str, optional): Output file path. Defaults to None.
             level (str, optional): Minimum log level. Defaults to "DEBUG".
             enabled (bool, optional): Is log enabled ? Defaults to True.
             colors (bool, optional): Are colors enabled ? Defaults to True.
             erase (bool, optional): Should preexisting file be erased ? Defaults to True.
-            singleton (bool, optional): Is singleton ? Defaults to False.
 
         Raises:
             LogLevelDoesNotExist: [description]
@@ -56,15 +48,17 @@ class Logger:
         self._colors = colors
         self._erase = erase
 
-        if output_file is None:
-            self._output_file = Path(
+        if file is None:
+            self._file = Path(
                 "/tmp/livelog.log"
                 if system() == "Darwin"
                 else Path(gettempdir()) / "livelog.log"
             )
         else:
-            self._output_file = Path(output_file)
-        self._verify_file(self._output_file)
+            self._file = Path(file)
+        self._verify_file(self._file)
+
+        print(self._file)
 
         level = level.upper()
         if level not in self._LEVELS:
@@ -72,14 +66,14 @@ class Logger:
         self._level = level
 
     @property
-    def output_file(self):
-        return self._output_file
+    def file(self):
+        return self._file
 
-    @output_file.setter
-    def set_output_file(self, value: str):
+    @file.setter
+    def set_file(self, value: str):
         path = Path(value)
         self._verify_file(file=path)
-        self._output_file = path
+        self._file = path
 
     @property
     def level(self):
@@ -111,9 +105,9 @@ class Logger:
     def _clear_file(self):
         """Clear output file content."""
 
-        if not self._erase or not self._output_file.is_file():
+        if not self._erase or not self._file.is_file():
             return
-        with open(self._output_file, "w") as f:
+        with open(self._file, "w") as f:
             pass
 
     def _write(self, level: str, content: str):
@@ -128,7 +122,7 @@ class Logger:
 
         time = datetime.now().strftime("%H:%M:%S.%f")[:-3]
 
-        with open(self._output_file, "a") as f:
+        with open(self._file, "a") as f:
             f.write(f"{level} | {time} - {content}\n")
 
     def _is_valid_level(self, level: str):
@@ -184,3 +178,13 @@ class Logger:
         if not self._is_valid_level("DEBUG"):
             return
         self._write(level="DBUG", content=message)
+
+class Singleton(type):
+    _instances = {}
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+class LoggerSingleton(Logger, metaclass=Singleton):
+    pass

@@ -50,7 +50,7 @@ def color_line(line: str):
 
     output = (
         f"{Style.DIM}{line[7:19]}{Style.BRIGHT} - {Style.NORMAL}"
-        f"{_LEVEL_COLORS[level]}{line[26:]}{Style.RESET_ALL}"
+        f"{_LEVEL_COLORS[level]}{line[22:]}{Style.RESET_ALL}"
     )
     return output
 
