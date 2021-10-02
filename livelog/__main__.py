@@ -41,7 +41,7 @@ def _parse_args():
     args = parser.parse_args()
 
     if args.file is not None:
-        file = Path(args.file)
+        file = Path(args.file).resolve()
     else:
         file = (
             Path("/tmp/livelog.log")
