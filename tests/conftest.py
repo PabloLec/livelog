@@ -12,9 +12,9 @@ def log_file(tmpdir_factory):
 def reader_test_file(tmpdir_factory):
     log_file = tmpdir_factory.mktemp("tmp").join("test.log")
     logger = Logger(file=log_file)
-    logger.debug("0")
-    logger.info("1")
-    logger.warn("2")
-    logger.error("3")
+    logger.debug("debug")
+    logger.info("info")
+    logger.warn("warning")
+    logger.error("error")
 
     return Path(log_file)
