@@ -85,10 +85,13 @@ class Reader(FileSystemEventHandler):
         """Verify if provided file path is a valid log file."""
 
         dir = self.file.parent.resolve()
-        if self.file.is_dir():
-            raise LogFileIsADirectory(path=self.file)
-        if not dir.is_dir():
-            raise LogPathDoesNotExist(path=dir)
+        try:
+            if self.file.is_dir():
+                raise LogFileIsADirectory(path=self.file)
+            if not dir.is_dir():
+                raise LogPathDoesNotExist(path=dir)
+        except PermissionError:
+            raise LogPathInsufficientPermissions(path=dir)
         if not access(dir, R_OK):
             raise LogPathInsufficientPermissions(path=dir)
 
