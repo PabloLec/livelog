@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from os import system, access, name, R_OK
+from os import getenv, system, access, R_OK
+from sys import exit as _exit
+from platform import system as system_
 from time import sleep
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -29,7 +31,12 @@ class Reader(FileSystemEventHandler):
             write to output path
     """
 
-    CLEAR_CMD = "cls" if name == "nt" else "clear"
+    if getenv("LIVELOG_ENV") == "TEST":
+        CLEAR_CMD = ""
+    elif "windows" in system_().lower():
+        CLEAR_CMD = "cls"
+    else:
+        CLEAR_CMD = "clear"
     LEVEL_COLORS = {
         "ERR!": Fore.RED,
         "WARN": Fore.YELLOW,
@@ -38,7 +45,7 @@ class Reader(FileSystemEventHandler):
     }
     LONG_LEVEL_TO_SHORT = {
         "ERROR": "ERR!",
-        "WARN": "WARNING",
+        "WARNING": "WARN",
         "INFO": "INFO",
         "DEBUG": "DBUG",
     }
@@ -69,6 +76,9 @@ class Reader(FileSystemEventHandler):
         self.read_index = 0
 
         system(self.CLEAR_CMD)
+        if not self.file_exists() and getenv("LIVELOG_ENV") == "TEST":
+            print("FILE NOT FOUND:", self.file)
+            _exit()
         while not self.file_exists():
             print("File not found, waiting for creation.")
             sleep(1)
@@ -80,10 +90,13 @@ class Reader(FileSystemEventHandler):
         """Verify if provided file path is a valid log file."""
 
         dir = self.file.parent.resolve()
-        if self.file.is_dir():
-            raise LogFileIsADirectory(path=self.file)
-        if not dir.is_dir():
-            raise LogPathDoesNotExist(path=dir)
+        try:
+            if self.file.is_dir():
+                raise LogFileIsADirectory(path=self.file)
+            if not dir.is_dir():
+                raise LogPathDoesNotExist(path=dir)
+        except PermissionError:
+            raise LogPathInsufficientPermissions(path=dir)
         if not access(dir, R_OK):
             raise LogPathInsufficientPermissions(path=dir)
 
@@ -148,10 +161,14 @@ class Reader(FileSystemEventHandler):
             list: Filtered lines
         """
 
-        for i, line in enumerate(lines):
-            level = line[:4]
+        i = 0
+        for _ in range(len(lines)):
+            level = lines[i][:4]
             if self.LEVELS[self.level] > self.LEVELS[level]:
                 del lines[i]
+                continue
+            i += 1
+
         return lines
 
     def color_line(self, line: str):
@@ -180,6 +197,10 @@ class Reader(FileSystemEventHandler):
     def loop_without_event(self):
         """If inotify instance limit reached, loop without watching file."""
 
+        if getenv("LIVELOG_ENV") == "TEST":
+            self.print_output()
+            _exit()
+
         while True:
             self.print_output()
             sleep(1)
@@ -199,7 +220,11 @@ def start_reader(file: str, level: str, nocolors: bool):
     observer.schedule(event_handler, file, recursive=True)
     try:
         observer.start()
-        input("")
+        if getenv("LIVELOG_ENV") == "TEST":
+            sleep(2)
+            _exit()
+        else:
+            input("")
         observer.stop()
         observer.join()
     except OSError:

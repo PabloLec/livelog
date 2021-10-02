@@ -55,7 +55,7 @@ class Logger:
         if file is None:
             self._file = Path(
                 "/tmp/livelog.log"
-                if system() == "Darwin"
+                if "darwin" in system().lower()
                 else Path(gettempdir()) / "livelog.log"
             )
         else:
@@ -95,10 +95,13 @@ class Logger:
         """
 
         dir = self._file.parent.resolve()
-        if self._file.is_dir():
-            raise LogFileIsADirectory(path=self._file)
-        if not dir.is_dir():
-            raise LogPathDoesNotExist(path=dir)
+        try:
+            if self._file.is_dir():
+                raise LogFileIsADirectory(path=self._file)
+            if not dir.is_dir():
+                raise LogPathDoesNotExist(path=dir)
+        except PermissionError:
+            raise LogPathInsufficientPermissions(path=dir)
         if not access(dir, X_OK):
             raise LogPathInsufficientPermissions(path=dir)
         self._clear_file()
