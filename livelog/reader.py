@@ -1,33 +1,41 @@
 # -*- coding: utf-8 -*-
 
-from typing import Union
-from os import _exit, system, name, access, R_OK, SEEK_END
+from os import system, access, name, R_OK
 from time import sleep
-from shutil import get_terminal_size
-from pathlib import Path
 from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler, DirModifiedEvent, FileModifiedEvent
+from watchdog.events import FileSystemEventHandler
 from colorama import Style, Fore
 from .errors import *
 
 
 class Reader(FileSystemEventHandler):
-    """Watchdog handler to monitor file changes."""
+    """Reading handler.
 
-    _CLEAR_CMD = "cls" if name == "nt" else "clear"
-    _LEVEL_COLORS = {
+    Attributes:
+        CLEAR_CMD (str): OS specific command to clear terminal
+        LEVEL_COLORS (dict): Log levels corresponding colors
+        LONGlevel_TO_SHORT (dict): Log level long to short format
+        LEVELS (dict): Log levels value for fast filtering
+        file (str): Log file path
+        level (str): Minimum log level to be displayed
+        nocolors (bool): If colors should not be printed
+        read_index (int): Current position of the cursor in the log file
+    """
+
+    CLEAR_CMD = "cls" if name == "nt" else "clear"
+    LEVEL_COLORS = {
         "ERR!": Fore.RED,
         "WARN": Fore.YELLOW,
         "INFO": Fore.BLUE,
         "DBUG": Fore.WHITE,
     }
-    _LONG_LEVEL_TO_SHORT = {
+    LONGlevel_TO_SHORT = {
         "ERROR": "ERR!",
         "WARN": "WARNING",
         "INFO": "INFO",
         "DEBUG": "DBUG",
     }
-    _LEVELS = {
+    LEVELS = {
         "ERR!": 3,
         "WARN": 2,
         "INFO": 1,
@@ -39,46 +47,53 @@ class Reader(FileSystemEventHandler):
 
         Args:
             file (str): Path of file to monitor
+            level (str): Minimum log level to be displayed
+            nocolors (bool): If colors should not be printed
+        Raises:
+            LogLevelDoesNotExist: If provided log level is not listed.
         """
 
-        self._file = file
-        self._verify_file()
-
+        self.file = file
+        self.verify_file()
         level = level.upper()
-        if level not in self._LONG_LEVEL_TO_SHORT:
+        if level not in self.LONGlevel_TO_SHORT:
             raise LogLevelDoesNotExist(level)
-        self._level = self._LONG_LEVEL_TO_SHORT[level]
-        self._nocolors = nocolors
+        self.level = self.LONGlevel_TO_SHORT[level]
+        self.nocolors = nocolors
 
-        self._read_index = 0
+        self.read_index = 0
 
-        system(self._CLEAR_CMD)
-        while not self._file_exists():
+        system(self.CLEAR_CMD)
+        while not self.file_exists():
             print("File not found, waiting for creation.")
             sleep(1)
-            system(self._CLEAR_CMD)
+            system(self.CLEAR_CMD)
 
-        self.on_modified(event=None)
+        self.on_modified()
 
-    def _verify_file(self):
+    def verify_file(self):
         """Verify if the file is a valid log file."""
 
-        dir = self._file.parent.resolve()
-        if self._file.is_dir():
-            raise LogFileIsADirectory(path=self._file)
+        dir = self.file.parent.resolve()
+        if self.file.is_dir():
+            raise LogFileIsADirectory(path=self.file)
         if not dir.is_dir():
             raise LogPathDoesNotExist(path=dir)
         if not access(dir, R_OK):
             raise LogPathInsufficientPermissions(path=dir)
 
-    def _file_exists(self):
-        return self._file.is_file()
+    def file_exists(self):
+        """Check if file exists.
+
+        Returns:
+            bool: File exists
+        """
+
+        return self.file.isfile()
 
     def print_output(self):
-        """Emulate tail command behavior by printing n last lines.
-
-        Args:
-            length (int): Number of lines to print
+        """Drive the printing process by getting new lines, filtering log
+        level and coloring the output.
         """
 
         rows = self.get_new_lines()
@@ -86,7 +101,7 @@ class Reader(FileSystemEventHandler):
             return
         rows = self.filter_log_level(rows)
 
-        if self._nocolors:
+        if self.nocolors:
             output = "".join(rows)
             print(output, end="")
         else:
@@ -95,43 +110,65 @@ class Reader(FileSystemEventHandler):
             print(Style.RESET_ALL + output + Style.RESET_ALL, end="")
 
     def get_new_lines(self):
-        """Emulate tail command behavior by printing n last lines."""
+        """Get newly created lines in log file based on stored cursor index.
 
-        with open(self._file, "r") as f:
-            f.seek(self._read_index)
+        Returns:
+            list: List of new lines
+        """
+
+        with open(self.file, "r") as f:
+            f.seek(self.read_index)
             rows = list(f)
-            if len(rows) == 0 and self._read_index > 0:
-                f.seek(self._read_index - 1)
+            if not rows and self.read_index > 0:
+                # If a modification event was triggered without any
+                # new rows, we should verify if there is content just before
+                # current cursor position to determine if file have been reset
+                # or just a false positive.
+                f.seek(self.read_index - 1)
                 if len(list(f)) > 0:
                     return None
-                self._read_index = 0
+                self.read_index = 0
                 return self.get_new_lines()
-            self._read_index += sum(map(len, rows))
+            self.read_index += sum(map(len, rows))
 
         return rows
 
     def filter_log_level(self, lines: list):
+        """Remove lines based on log level.
+
+        Args:
+            lines (list): Lines to be filtered
+
+        Returns:
+            list: Filtered lines
+        """
+
         for i, line in enumerate(lines):
             level = line[:4]
-            if self._LEVELS[self._level] > self._LEVELS[level]:
+            if self.LEVELS[self.level] > self.LEVELS[level]:
                 del lines[i]
         return lines
 
     def color_line(self, line: str):
+        """Parse and color a line based on its log level.
+
+        Args:
+            line (str): Line to be colored
+
+        Returns:
+            str: Colored line
+        """
+
         level = line[:4]
 
         output = (
             f"{Style.DIM}{line[7:19]}{Style.BRIGHT} - {Style.NORMAL}"
-            f"{self._LEVEL_COLORS[level]}{line[22:]}{Style.RESET_ALL}"
+            f"{self.LEVEL_COLORS[level]}{line[22:]}{Style.RESET_ALL}"
         )
         return output
 
-    def on_modified(self, event: Union[FileModifiedEvent, None]):
-        """File modification callback.
-
-        Args:
-            event (Union[FileModifiedEvent, None]): Watchdog event
-        """
+    def on_modified(self, *args, **kwargs):
+        """File modification callback."""
 
         self.print_output()
 
@@ -141,6 +178,8 @@ def start_reader(file: str, level: str, nocolors: bool):
 
     Args:
         file (str): File to be read
+        level (str): Minimum log level to be displayed
+        nocolors (bool): If colors should not be printed
     """
 
     event_handler = Reader(file=file, level=level, nocolors=nocolors)
