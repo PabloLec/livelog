@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from os import system, access, name, R_OK
+from os import environ, system, access, name, R_OK
 from time import sleep
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -29,7 +29,12 @@ class Reader(FileSystemEventHandler):
             write to output path
     """
 
-    CLEAR_CMD = "cls" if name == "nt" else "clear"
+    if environ.get("LIVELOG_ENV") == "TEST":
+        CLEAR_CMD = ""
+    elif name == "nt":
+        CLEAR_CMD = "cls"
+    else:
+        CLEAR_CMD = "clear"
     LEVEL_COLORS = {
         "ERR!": Fore.RED,
         "WARN": Fore.YELLOW,
