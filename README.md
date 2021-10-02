@@ -67,7 +67,7 @@ from livelog import Logger
 logger = Logger(file= "/home/user/",
                 level = "INFO",
                 enabled = False,
-                erase = False,
+                erase = False)
 ```
 
 #### Methods
@@ -111,7 +111,7 @@ logger.error("Logging disabled. This error message will not be written.")
 
 #### Singleton
 
-`livelog` also provides a built singleton:
+`livelog` also provides a built-in singleton:
 
 ```your_first_file.py```
 ``` python
@@ -130,4 +130,26 @@ from livelog import LoggerSingleton
 logger = LoggerSingleton()
 # LoggerSingleton() returned the instance from your first file.
 logger.debug("This will write to /tmp/file.log")
+```
+
+## Reading
+
+Although you can access to your logging file like any other, you can use the provided reader.
+
+If you did not specify a file for `Logger` simply use:
+```
+python3 -m livelog
+```
+
+`livelog` will read in real time the default log file.
+
+#### Options
+
+- `-f` or `--file` - Set the path of your logging file
+- `-l` or `--level` - Set the minimum log level to be read.
+- `--nocolors` - Do not print colors
+
+*Example:*
+```
+python3 -m livelog -f /tmp/myfile.log -l INFO --nocolors
 ```
