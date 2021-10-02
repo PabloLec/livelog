@@ -43,7 +43,7 @@ class Reader(FileSystemEventHandler):
     }
     LONG_LEVEL_TO_SHORT = {
         "ERROR": "ERR!",
-        "WARN": "WARNING",
+        "WARNING": "WARN",
         "INFO": "INFO",
         "DEBUG": "DBUG",
     }
@@ -153,10 +153,14 @@ class Reader(FileSystemEventHandler):
             list: Filtered lines
         """
 
-        for i, line in enumerate(lines):
-            level = line[:4]
+        i = 0
+        for _ in range(len(lines)):
+            level = lines[i][:4]
             if self.LEVELS[self.level] > self.LEVELS[level]:
                 del lines[i]
+                continue
+            i += 1
+
         return lines
 
     def color_line(self, line: str):

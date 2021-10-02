@@ -34,3 +34,49 @@ def test_default(reader_test_file, capfd):
     assert all(x in info_line for x in (DIM, BRIGHT, NORMAL, BLUE, RESET_ALL))
     assert all(x in warning_line for x in (DIM, BRIGHT, NORMAL, YELLOW, RESET_ALL))
     assert all(x in error_line for x in (DIM, BRIGHT, NORMAL, RED, RESET_ALL))
+
+
+def test_read_level_info(reader_test_file, capfd):
+    Reader(
+        file=reader_test_file,
+        level="INFO",
+        nocolors=False,
+    )
+    out, _ = capfd.readouterr()
+
+    assert len(findall(r"(.* - .*debug.*\n)", out)) == 0
+    assert len(findall(r"(^.* - .*info.*\n)", out)) == 1
+    assert len(findall(r"(\n.* - .*warning.*\n)", out)) == 1
+    assert len(findall(r"(\n.* - .*error.*\n)", out)) == 1
+
+
+def test_read_level_warning(reader_test_file, capfd):
+    Reader(
+        file=reader_test_file,
+        level="WARNING",
+        nocolors=False,
+    )
+    out, _ = capfd.readouterr()
+
+    print(out)
+
+    assert len(findall(r"(.* - .*debug.*\n)", out)) == 0
+    assert len(findall(r"(.* - .*info.*\n)", out)) == 0
+    assert len(findall(r"^(.* - .*warning.*\n)", out)) == 1
+    assert len(findall(r"(\n.* - .*error.*\n)", out)) == 1
+
+
+def test_read_level_error(reader_test_file, capfd):
+    Reader(
+        file=reader_test_file,
+        level="ERROR",
+        nocolors=False,
+    )
+    out, _ = capfd.readouterr()
+
+    print(out)
+
+    assert len(findall(r"(.* - .*debug.*\n)", out)) == 0
+    assert len(findall(r"(.* - .*info.*\n)", out)) == 0
+    assert len(findall(r"(.* - .*warning.*\n)", out)) == 0
+    assert len(findall(r"(^.* - .*error.*\n)", out)) == 1
