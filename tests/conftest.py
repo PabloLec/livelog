@@ -1,11 +1,17 @@
 import pytest
-from livelog import Logger
 from pathlib import Path
+from livelog import Logger
 
 
 @pytest.fixture(scope="session")
 def log_file(tmpdir_factory):
     return tmpdir_factory.mktemp("tmp").join("test.log")
+
+
+@pytest.fixture(scope="function")
+def default_log_file():
+    logger = Logger()
+    logger.debug("It works!")
 
 
 @pytest.fixture(scope="function")
