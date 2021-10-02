@@ -5,12 +5,18 @@ from pathlib import Path
 from platform import system
 from tempfile import gettempdir
 from datetime import datetime
-from colorama import Fore, Style
 from .errors import *
 
 
 class Logger:
-    """Main logger object.
+    """Logging handler.
+
+    Attributes:
+        LEVELS (dict): Log levels value for fast filtering
+        enabled (bool): If logging is enabled
+        erase (bool): If preexisting file should be erased
+        file (str): Log file path
+        level (str): Minimum log level to be displayed
 
     Raises:
         LogLevelDoesNotExist: If user provide an unknown log level
@@ -20,14 +26,18 @@ class Logger:
             write to output path
     """
 
-    _LEVELS = {"ERROR": 3, "WARNING": 2, "INFO": 1, "DEBUG": 0}
+    _LEVELS = {
+        "ERROR": 3,
+        "WARNING": 2,
+        "INFO": 1,
+        "DEBUG": 0,
+    }
 
     def __init__(
         self,
         file: str = None,
         level: str = "DEBUG",
         enabled: bool = True,
-        colors: bool = True,
         erase: bool = True,
     ):
         """Logger initialization.
@@ -36,15 +46,10 @@ class Logger:
             file (str, optional): Output file path. Defaults to None.
             level (str, optional): Minimum log level. Defaults to "DEBUG".
             enabled (bool, optional): Is log enabled ? Defaults to True.
-            colors (bool, optional): Are colors enabled ? Defaults to True.
             erase (bool, optional): Should preexisting file be erased ? Defaults to True.
-
-        Raises:
-            LogLevelDoesNotExist: [description]
         """
 
         self._enabled = enabled
-        self._colors = colors
         self._erase = erase
 
         if file is None:
@@ -85,7 +90,9 @@ class Logger:
         self._level = level
 
     def _verify_file(self):
-        """Verify if the file is a valid log file and clear its preexisting content."""
+        """Verify if provided file path is a valid log file and clear its
+        preexisting content.
+        """
 
         dir = self._file.parent.resolve()
         if self._file.is_dir():
@@ -108,6 +115,7 @@ class Logger:
         """Write provided content to output file.
 
         Args:
+            level (str); Log level
             content (str): Content to be written
         """
 

@@ -14,12 +14,19 @@ class Reader(FileSystemEventHandler):
     Attributes:
         CLEAR_CMD (str): OS specific command to clear terminal
         LEVEL_COLORS (dict): Log levels corresponding colors
-        LONGlevel_TO_SHORT (dict): Log level long to short format
+        LONG_LEVEL_TO_SHORT (dict): Log level long to short format
         LEVELS (dict): Log levels value for fast filtering
         file (str): Log file path
         level (str): Minimum log level to be displayed
         nocolors (bool): If colors should not be printed
         read_index (int): Current position of the cursor in the log file
+
+    Raises:
+        LogLevelDoesNotExist: If user provide an unknown log level
+        LogFileIsADirectory: If user provide a directory as output path
+        LogPathDoesNotExist: If user provide a non existing output path
+        LogPathInsufficientPermissions: If user does not have permissions to
+            write to output path
     """
 
     CLEAR_CMD = "cls" if name == "nt" else "clear"
@@ -29,7 +36,7 @@ class Reader(FileSystemEventHandler):
         "INFO": Fore.BLUE,
         "DBUG": Fore.WHITE,
     }
-    LONGlevel_TO_SHORT = {
+    LONG_LEVEL_TO_SHORT = {
         "ERROR": "ERR!",
         "WARN": "WARNING",
         "INFO": "INFO",
@@ -49,16 +56,14 @@ class Reader(FileSystemEventHandler):
             file (str): Path of file to monitor
             level (str): Minimum log level to be displayed
             nocolors (bool): If colors should not be printed
-        Raises:
-            LogLevelDoesNotExist: If provided log level is not listed.
         """
 
         self.file = file
         self.verify_file()
         level = level.upper()
-        if level not in self.LONGlevel_TO_SHORT:
+        if level not in self.LONG_LEVEL_TO_SHORT:
             raise LogLevelDoesNotExist(level)
-        self.level = self.LONGlevel_TO_SHORT[level]
+        self.level = self.LONG_LEVEL_TO_SHORT[level]
         self.nocolors = nocolors
 
         self.read_index = 0
@@ -72,7 +77,7 @@ class Reader(FileSystemEventHandler):
         self.on_modified()
 
     def verify_file(self):
-        """Verify if the file is a valid log file."""
+        """Verify if provided file path is a valid log file."""
 
         dir = self.file.parent.resolve()
         if self.file.is_dir():
