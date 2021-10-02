@@ -94,7 +94,7 @@ class Reader(FileSystemEventHandler):
             bool: File exists
         """
 
-        return self.file.isfile()
+        return self.file.is_file()
 
     def print_output(self):
         """Drive the printing process by getting new lines, filtering log
@@ -177,6 +177,13 @@ class Reader(FileSystemEventHandler):
 
         self.print_output()
 
+    def loop_without_event(self):
+        """If inotify instance limit reached, loop without watching file."""
+
+        while True:
+            self.print_output()
+            sleep(1)
+
 
 def start_reader(file: str, level: str, nocolors: bool):
     """Start reader process.
@@ -190,8 +197,11 @@ def start_reader(file: str, level: str, nocolors: bool):
     event_handler = Reader(file=file, level=level, nocolors=nocolors)
     observer = Observer()
     observer.schedule(event_handler, file, recursive=True)
-    observer.start()
-
-    input("")
-    observer.stop()
-    observer.join()
+    try:
+        observer.start()
+        input("")
+        observer.stop()
+        observer.join()
+    except OSError:
+        # Handle "OSError: [Errno 24] inotify instance limit reached" exception
+        event_handler.loop_without_event()

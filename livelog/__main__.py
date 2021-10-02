@@ -43,8 +43,8 @@ def _parse_args():
     if args.file is not None:
         file = Path(args.file)
     else:
-        file = Path(
-            "/tmp/livelog.log"
+        file = (
+            Path("/tmp/livelog.log")
             if system() == "Darwin"
             else Path(gettempdir()) / "livelog.log"
         )
