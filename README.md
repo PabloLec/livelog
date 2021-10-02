@@ -34,6 +34,13 @@ Its main purpose is to provide live logging for situation where logging to conso
 It provides a `Logger` object for your code and a built-in reader to see your logs in real time from another shell.
 Even if its overall behavior is opinionated it does offer some customization.
 
+## Demo
+
+<p align="center">
+    <img src="docs/assets/demo.gif">
+</p>
+
+
 ## Installation
 
 ```
