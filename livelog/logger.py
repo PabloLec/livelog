@@ -89,6 +89,14 @@ class Logger:
             raise LogLevelDoesNotExist(level)
         self._level = level
 
+    @property
+    def enabled(self):
+        return self._enabled
+
+    @enabled.setter
+    def enabled(self, value: bool):
+        self._enabled = value
+
     def _verify_file(self):
         """Verify if provided file path is a valid log file and clear its
         preexisting content.
