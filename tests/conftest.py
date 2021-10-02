@@ -1,6 +1,21 @@
 import pytest
+from os import getenv
 from pathlib import Path
 from livelog import Logger
+from platform import system
+
+
+@pytest.fixture(scope="session")
+def restricted_dir():
+    if "darwin" in system().lower():
+        return getenv("HOME") + "/testfolder/"
+    else:
+        return "/root/"
+
+
+@pytest.fixture(scope="session")
+def system_is_windows():
+    return "windows" in system().lower()
 
 
 @pytest.fixture(scope="session")

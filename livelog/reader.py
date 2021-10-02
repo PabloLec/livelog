@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from os import environ, system, access, name, R_OK
+from os import getenv, system, access, R_OK
+from sys import exit as _exit
+from platform import system as system_
 from time import sleep
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -29,9 +31,9 @@ class Reader(FileSystemEventHandler):
             write to output path
     """
 
-    if environ.get("LIVELOG_ENV") == "TEST":
+    if getenv("LIVELOG_ENV") == "TEST":
         CLEAR_CMD = ""
-    elif name == "nt":
+    elif "windows" in system_().lower():
         CLEAR_CMD = "cls"
     else:
         CLEAR_CMD = "clear"
@@ -74,6 +76,9 @@ class Reader(FileSystemEventHandler):
         self.read_index = 0
 
         system(self.CLEAR_CMD)
+        if not self.file_exists() and getenv("LIVELOG_ENV") == "TEST":
+            print("FILE NOT FOUND:", self.file)
+            _exit()
         while not self.file_exists():
             print("File not found, waiting for creation.")
             sleep(1)
@@ -192,6 +197,10 @@ class Reader(FileSystemEventHandler):
     def loop_without_event(self):
         """If inotify instance limit reached, loop without watching file."""
 
+        if getenv("LIVELOG_ENV") == "TEST":
+            self.print_output()
+            _exit()
+
         while True:
             self.print_output()
             sleep(1)
@@ -211,7 +220,11 @@ def start_reader(file: str, level: str, nocolors: bool):
     observer.schedule(event_handler, file, recursive=True)
     try:
         observer.start()
-        input("")
+        if getenv("LIVELOG_ENV") == "TEST":
+            sleep(2)
+            _exit()
+        else:
+            input("")
         observer.stop()
         observer.join()
     except OSError:

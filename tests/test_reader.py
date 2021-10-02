@@ -146,9 +146,12 @@ def test_reader_wrong_log_path():
         Reader(file=Path("/foo/bar/test.log"), level="DEBUG", nocolors=True)
 
 
-def test_reader_insufficient_permissions():
+def test_reader_insufficient_permissions(restricted_dir, system_is_windows):
+    if system_is_windows:
+        return
+
     with raises(errors.LogPathInsufficientPermissions):
-        Reader(file=Path("/root/test.log"), level="DEBUG", nocolors=True)
+        Reader(file=Path(restricted_dir + "test.log"), level="DEBUG", nocolors=True)
 
 
 def test_reader_unknow_log_level(reader_test_file):

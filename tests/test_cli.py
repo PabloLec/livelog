@@ -2,14 +2,16 @@ from subprocess import Popen, PIPE
 
 
 def test_default(default_log_file):
-    process = Popen("timeout 2 python3 -m livelog".split(), stdout=PIPE)
+    print("python3 -m livelog".split())
+    process = Popen("python3 -m livelog".split(), stdout=PIPE)
     out, _ = process.communicate()
     assert "It works" in str(out)
 
 
 def test_custom_file(reader_test_file):
     process = Popen(
-        f"timeout 2 python3 -m livelog -f {reader_test_file}".split(), stdout=PIPE
+        f"python3 -m livelog -f {reader_test_file}".split(),
+        stdout=PIPE,
     )
     out, _ = process.communicate()
     assert "debug" in str(out)
@@ -17,7 +19,7 @@ def test_custom_file(reader_test_file):
 
 def test_nocolors(reader_test_file):
     process = Popen(
-        f"timeout 2 python3 -m livelog -f {reader_test_file} --nocolors".split(),
+        f"python3 -m livelog -f {reader_test_file} --nocolors".split(),
         stdout=PIPE,
     )
     out, _ = process.communicate()
@@ -29,7 +31,7 @@ def test_nocolors(reader_test_file):
 
 def test_custom_level(reader_test_file):
     process = Popen(
-        f"timeout 2 python3 -m livelog -f {reader_test_file} --level=INFO --nocolors".split(),
+        f"python3 -m livelog -f {reader_test_file} --level=INFO --nocolors".split(),
         stdout=PIPE,
     )
     out, _ = process.communicate()

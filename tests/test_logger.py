@@ -223,9 +223,12 @@ def test_wrong_log_path():
         Logger(file="/foo/bar/test.log")
 
 
-def test_insufficient_permissions():
+def test_insufficient_permissions(restricted_dir, system_is_windows):
+    if system_is_windows:
+        return
+
     with raises(errors.LogPathInsufficientPermissions):
-        Logger(file="/root/test.log")
+        Logger(file=restricted_dir + "test.log")
 
 
 def test_unknow_log_level(log_file):

@@ -55,7 +55,7 @@ class Logger:
         if file is None:
             self._file = Path(
                 "/tmp/livelog.log"
-                if system() == "Darwin"
+                if "darwin" in system().lower()
                 else Path(gettempdir()) / "livelog.log"
             )
         else:
