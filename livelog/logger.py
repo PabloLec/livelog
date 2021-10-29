@@ -75,7 +75,7 @@ class Logger:
     @file.setter
     def set_file(self, value: str):
         path = Path(value)
-        self._verify_file(file=path)
+        self._verify_file()
         self._file = path
 
     @property
