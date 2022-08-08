@@ -22,7 +22,7 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.7"
 colorama = "0.4.5"
-watchdog = "2.1.5"
+watchdog = "2.1.9"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
