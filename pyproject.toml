@@ -8,9 +8,9 @@ readme = "README.md"
 homepage = "https://github.com/PabloLec/livelog"
 repository = "https://github.com/PabloLec/livelog"
 documentation = "https://github.com/PabloLec/livelog#readme"
-keywords=["log", "logs", "logger", "reader", "utility"]
+keywords=["log", "logs", "logger", "reader", "utility", "console", "terminal", "livelog", "tui", "cui"]
 classifiers = [
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Environment :: Console",
         "Intended Audience :: Developers",
         "Programming Language :: Python :: 3.7",
