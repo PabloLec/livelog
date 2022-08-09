@@ -1,2 +1,2 @@
 colorama==0.4.4
-watchdog==2.1.5
+watchdog==2.1.9
