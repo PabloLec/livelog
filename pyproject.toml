@@ -21,7 +21,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.7"
-colorama = "0.4.5"
+colorama = "0.4.6"
 watchdog = "2.1.9"
 
 [build-system]
